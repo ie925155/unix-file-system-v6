@@ -25,8 +25,37 @@ int inode_iget(struct unixfilesystem *fs, int inumber, struct inode *inp) {
 
 int inode_indexlookup(struct unixfilesystem *fs, struct inode *inp, int blockNum) {
   int isLargeFile = ( (inp->i_mode & ILARG) != 0 );
-  fprintf(stderr, "isLargeFile=%d\n", isLargeFile);
-  return inp->i_addr[blockNum];
+  //fprintf(stderr, "isLargeFile=%d\n", isLargeFile);
+  if(isLargeFile) //indirect mode
+  {
+    int offset = blockNum / (DISKIMG_SECTOR_SIZE / sizeof(uint16_t));
+    fprintf(stderr, "offset=%d sector_index=%d\n", offset, blockNum % 256);
+    if(offset < 7) //singe indirect sector
+    {
+      int num_of_sector_index = DISKIMG_SECTOR_SIZE / sizeof(uint16_t);
+      int single_indirect_index = inp->i_addr[offset];
+      uint16_t sector_index[num_of_sector_index];
+      int success = diskimg_readsector(fs->dfd, single_indirect_index, sector_index);
+      if(success == -1) return -1;
+      return sector_index[blockNum % num_of_sector_index];
+    }
+    else // doubly indirect sector
+    {
+      int doubly_indirect_index = inp->i_addr[7];
+      int num_of_single_sector_index = DISKIMG_SECTOR_SIZE / sizeof(uint16_t);
+      int num_of_sector_index = DISKIMG_SECTOR_SIZE / sizeof(uint16_t);
+      uint16_t single_indirect_index[num_of_single_sector_index];
+      int success = diskimg_readsector(fs->dfd, doubly_indirect_index, single_indirect_index);
+      if(success == -1) return -1;
+      uint16_t sector_index[num_of_sector_index];
+      int single_indirect_offset = offset - 7;
+      success = diskimg_readsector(fs->dfd, single_indirect_index[single_indirect_offset], sector_index);
+      if(success == -1) return -1;
+      return sector_index[blockNum % num_of_sector_index];
+    }
+  }
+  else
+    return inp->i_addr[blockNum];
 }
 
 int inode_getsize(struct inode *inp) {
