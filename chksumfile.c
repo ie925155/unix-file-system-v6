@@ -14,6 +14,7 @@
 #include <openssl/sha.h>
 
 int chksumfile_byinumber(struct unixfilesystem *fs, int inumber, void *chksum) {
+  if(inumber > 2) return -1;
   SHA_CTX shactx;
   if (!SHA1_Init(&shactx)) {
     // An error occurred initializing the SHA1 context.

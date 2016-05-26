@@ -13,7 +13,7 @@
 #include "pathname.h"
 #include "chksumfile.h"
 
-int quietFlag = 0; 
+int quietFlag = 0;
 int idumpFlag = 0;
 int pdumpFlag = 0;
 
@@ -36,9 +36,9 @@ int main(int argc, char *argv[]) {
     case 'p':
       pdumpFlag = 1;
       break;
-    default: 
+    default:
       PrintUsageAndExit(argv[0]);
-    } 
+    }
   }
 
   if (optind != argc-1) {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  if (!quietFlag) {  
+  if (!quietFlag) {
     int disksize = diskimg_getsize(fd);
     if (disksize < 0) {
       fprintf(stderr, "Error getting the size of %s\n", argv[1]);
@@ -99,6 +99,7 @@ static void DumpInodeChecksum(struct unixfilesystem *fs, FILE *f) {
       fprintf(stderr,"Can't read inode %d \n", inumber);
       return;
     }
+
     if ((in.i_mode & IALLOC) == 0) {
       // Skip this inode if it's not allocated.
       continue;
@@ -160,7 +161,7 @@ static void DumpPathAndChildren(struct unixfilesystem *fs, const char *pathname,
     pathname++; /* Delete extra / character */
   }
 
-  if ((in.i_mode & IFMT) == IFDIR) { 
+  if ((in.i_mode & IFMT) == IFDIR) {
       const unsigned int MAXPATH = 1024;
       if (strlen(pathname) > MAXPATH-16) {
         fprintf(stderr, "Too deep of directories %s\n", pathname);
@@ -186,15 +187,15 @@ static void DumpPathAndChildren(struct unixfilesystem *fs, const char *pathname,
 
 /**
  * Output to the specified file the checksum of files on the disk by
- * tranversing the naming hierarcy. 
- * Note this is used by the grading script so don't alter output format. 
+ * tranversing the naming hierarcy.
+ * Note this is used by the grading script so don't alter output format.
  */
 static void DumpPathnameChecksum(struct unixfilesystem *fs, FILE *f) {
   DumpPathAndChildren(fs, "/", ROOT_INUMBER, f);
 }
 
 /**
- * Print all the entries in the specified directory. 
+ * Print all the entries in the specified directory.
  */
 static void PrintDirectory(struct unixfilesystem *fs,  char *pathname) {
   int inumber = pathname_lookup(fs, pathname);
@@ -209,21 +210,21 @@ static void PrintDirectory(struct unixfilesystem *fs,  char *pathname) {
     fprintf(stderr, "Can't read entries from %s\n", pathname);
     return;
   }
-  
-  for (int i = 0; i < numentries; i++) { 
+
+  for (int i = 0; i < numentries; i++) {
     printf("Direntry %s Name %s Inumber %d\n", pathname, direntries[i].d_name, direntries[i].d_inumber);
   }
 }
 
 /**
- * Fetch as many entries from a directory that will fit in the specified array. Return the 
- * number of entries found. 
+ * Fetch as many entries from a directory that will fit in the specified array. Return the
+ * number of entries found.
  */
 static int GetDirEntries(struct unixfilesystem *fs, int inumber, struct direntv6 *entries, int maxNumEntries) {
   struct inode in;
   int err = inode_iget(fs, inumber, &in);
   if (err < 0) return err;
-  
+
   if (!(in.i_mode & IALLOC) || ((in.i_mode & IFMT) != IFDIR)) {
     /* Not allocated or not a directory */
     return -1;
@@ -245,8 +246,8 @@ static int GetDirEntries(struct unixfilesystem *fs, int inumber, struct direntv6
       fprintf(stderr, "Error reading directory\n");
       return -1;
     }
-    numEntriesInBlock = bytesLeft/sizeof(struct direntv6); 
-    for (i = 0; i <  numEntriesInBlock ; i++) { 
+    numEntriesInBlock = bytesLeft/sizeof(struct direntv6);
+    for (i = 0; i <  numEntriesInBlock ; i++) {
       entries[count] = dir[i];
       count++;
       if (count >= maxNumEntries) return count;
@@ -259,8 +260,8 @@ static int GetDirEntries(struct unixfilesystem *fs, int inumber, struct direntv6
 static void PrintUsageAndExit(char *progname) {
   fprintf(stderr, "Usage: %s <options> diskimagePath\n", progname);
   fprintf(stderr, "where <options> can be:\n");
-  fprintf(stderr, "-q     don't print extra info\n"); 
-  fprintf(stderr, "-i     print all inode checksums\n"); 
-  fprintf(stderr, "-p     print all pathname checksums\n");  
+  fprintf(stderr, "-q     don't print extra info\n");
+  fprintf(stderr, "-i     print all inode checksums\n");
+  fprintf(stderr, "-p     print all pathname checksums\n");
   exit(EXIT_FAILURE);
 }

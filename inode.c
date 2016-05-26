@@ -1,21 +1,34 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "inode.h"
 #include "diskimg.h"
+#include "ino.h"
 
-// remove the placeholder implementation and replace with your own
 int inode_iget(struct unixfilesystem *fs, int inumber, struct inode *inp) {
-  fprintf(stderr, "inode_get(inumber=%d) not implemented, returning -1\n", inumber);
-  return -1;  
+  int inumber_index = inumber - 1;
+  int fd = fs->dfd;
+  int inode_per_sector = DISKIMG_SECTOR_SIZE/sizeof(struct inode);
+  int sector_offset = inumber_index / inode_per_sector;
+  int sector_index = INODE_START_SECTOR + sector_offset;
+  /*fprintf(stdout, "nodePerSector = %u sector_index = %d\n", inode_per_sector,
+    sector_index);*/
+  struct inode inode_table[inode_per_sector];
+  int size = diskimg_readsector(fd, sector_index, inode_table);
+  if(size == -1) return -1;
+  int inode_position = inumber_index % inode_per_sector;
+  memcpy(inp, &inode_table[inode_position], sizeof(struct inode));
+  return 0;
 }
 
-// remove the placeholder implementation and replace with your own
 int inode_indexlookup(struct unixfilesystem *fs, struct inode *inp, int blockNum) {
-  fprintf(stderr, "inode_indexlookup(blockNum=%d) not implemented, returning -1\n", blockNum);
-  return -1;
+  int isLargeFile = ( (inp->i_mode & ILARG) != 0 );
+  fprintf(stderr, "isLargeFile=%d\n", isLargeFile);
+  return inp->i_addr[blockNum];
 }
 
 int inode_getsize(struct inode *inp) {
-  return ((inp->i_size0 << 16) | inp->i_size1); 
+  return ((inp->i_size0 << 16) | inp->i_size1);
 }

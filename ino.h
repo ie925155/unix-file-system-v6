@@ -15,7 +15,7 @@
  *   int    i_addr[8];
  *   int    i_atime[2];
  *   int    i_mtime[2];
- * 
+ *
  * The machine this originally ran on had 16-bit ints and 16-bit pointers.
  * We've converted the structure to use types from stdint.h so that the widths
  * of the fields match those in the original structure.
