@@ -16,5 +16,9 @@ int file_getblock(struct unixfilesystem *fs, int inumber, int blockNum, void *bu
   int index = inode_indexlookup(fs, &in, blockNum);
   int byte_read = diskimg_readsector(fd, index, buf);
   if(byte_read == -1) return -1;
-  return byte_read;
+
+  int file_size = inode_getsize(&in);
+  int num_of_block = file_size / DISKIMG_SECTOR_SIZE;
+  //Only the last block maybe not full size (less than 512 bytes)
+  return (blockNum < num_of_block) ? byte_read : file_size % byte_read;
 }

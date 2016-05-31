@@ -29,7 +29,7 @@ int inode_indexlookup(struct unixfilesystem *fs, struct inode *inp, int blockNum
   if(isLargeFile) //indirect mode
   {
     int offset = blockNum / (DISKIMG_SECTOR_SIZE / sizeof(uint16_t));
-    fprintf(stderr, "offset=%d sector_index=%d\n", offset, blockNum % 256);
+    //fprintf(stderr, "offset=%d sector_index=%d\n", offset, blockNum % 256);
     if(offset < 7) //singe indirect sector
     {
       int num_of_sector_index = DISKIMG_SECTOR_SIZE / sizeof(uint16_t);
